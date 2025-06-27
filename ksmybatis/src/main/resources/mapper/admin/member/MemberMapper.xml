@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ksmybatis.admin.member.mapper.MemberMapper">
+	
+	<!-- 여기 정의된 id="memberResultMap"을 참조해야 합니다 -->
+	<resultMap type="ksmybatis.admin.member.domain.Member" id="memberResultMap">
+		<id column="mbr_id" property="memberId" />
+		<result column="mbr_pw" property="memberPw"/>
+		<result column="mbr_name" property="memberName"/>
+		<result column="mbr_grd" property="memberLevel"/>
+		<result column="comm_nm" property="memberLevelName"/>
+		<result column="mbr_addr" property="memberAddress"/>
+		<result column="mbr_daddr" property="memberDAddress"/>
+		<result column="mbr_zip" property="memberZip"/>
+		<result column="mbr_telno" property="memberTelNo"/>
+		<!-- 참고: property에 공백이 있습니다. " memberEmail" -> "memberEmail" 로 수정하는 것이 좋습니다. -->
+		<result column="mbr_email" property="memberEmail"/> 
+		<result column="mbr_reg_date"  property="memberRegDate"/>
+	</resultMap>
+	
+	<delete id="removeMemberById" parameterType="string">
+		/* 회원탈퇴 */
+		delete
+		from
+			members
+		where
+			mbr_id = #{memberId};
+	
+	</delete>
+	
+	
+	<delete id="removeMemberLoginLogById" parameterType="String">
+		/* 특정회원로그인 이력 삭제 */
+		delete
+		from
+			members_login_log
+		where
+			login_id = #{memberId};
+		
+	
+	</delete>
+	
+	<update id="modifyMemberInfo" parameterType="Member">
+		/* 특정회원 수정 */
+		UPDATE members
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="memberPw != null and memberPw != ''">
+				mbr_pw = #{memberPw},
+			
+			</if>
+			<if test="memberName != null and memberName != ''">
+				mbr_name = #{memberName},
+			
+			</if>
+			<if test="memberLevel != null and memberLevel != ''">
+				mbr_grd = #{memberLevel},
+			
+			</if>
+			<if test="memberAddress != null and memberAddress != ''">
+				mbr_addr = #{memberAddress},
+			
+			</if>
+			<if test="memberDAddress != null and memberDAddress != ''">
+				mbr_daddr = #{memberDAddress},
+			
+			</if>
+			<if test="memberZip != null and memberZip != ''">
+				mbr_zip = #{memberZip},
+			
+			</if>
+			<if test="memberTelNo != null and memberTelNo != ''">
+				mbr_telno = #{memberTelNo},
+			
+			</if>
+			<if test="memberEmail != null and memberEmail != ''">
+				mbr_email = #{memberEmail},
+			
+			</if>
+		
+		</trim>
+		where
+			mbr_id=#{memberId};
+	</update>
+	
+	<select id="getMemberInfoById" parameterType="String" resultMap="memberResultMap">
+		/* 특정회원 조회 */
+		SELECT 	
+			m.mbr_id ,
+			m.mbr_pw,
+			m.mbr_name,
+			m.mbr_grd,
+			cc.comm_nm,
+			m.mbr_addr,
+			m.mbr_daddr,
+			m.mbr_zip,
+			m.mbr_telno,
+			m.mbr_email,
+			m.mbr_reg_date
+		FROM
+			members m INNER JOIN comm_code cc
+			ON m.mbr_grd=cc.comm_cd
+		where
+			m.mbr_id = #{memberId};	
+			
+	</select>
+	
+	<insert id="addMember" parameterType="Member">
+		/* 회원등록 */
+		INSERT INTO ksmart55db.members
+		(mbr_id, mbr_pw, mbr_name, mbr_grd, mbr_addr, mbr_daddr, mbr_zip, mbr_telno, mbr_email, mbr_reg_date)
+		VALUES(#{memberId},#{memberPw},#{memberName},#{memberLevel},#{memberAddress},#{memberDAddress},
+			   #{memberZip}, #{memberTelNo}, #{memberEmail}, CURDATE());
+	
+	</insert>
+	<select  id="checkMemberById" parameterType="string" resultType="boolean">
+		/* 아이디 중복 체크 */
+		select
+   			count(*)
+		from
+			members m
+		where
+			m.mbr_id = #{memberId};
+	
+	</select>
+	
+	<!-- 여기를 resultType -> resultMap 으로 수정 -->
+	<select id="getMemberList" resultMap="memberResultMap">
+	/*회원목록조회*/
+		SELECT 	
+			m.mbr_id ,
+			m.mbr_pw,
+			m.mbr_name,
+			m.mbr_grd,
+			cc.comm_nm,
+			m.mbr_addr,
+			m.mbr_daddr,
+			m.mbr_zip,
+			m.mbr_telno,
+			m.mbr_email,
+			m.mbr_reg_date
+		FROM
+			members m INNER JOIN comm_code cc
+			ON m.mbr_grd=cc.comm_cd
+		ORDER BY CAST(SUBSTRING_INDEX(m.mbr_id,'ksmartid',-1) AS UNSIGNED)
+	</select>
+	
+</mapper>
